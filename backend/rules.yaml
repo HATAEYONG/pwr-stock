@@ -1,0 +1,135 @@
+system:
+  lookback_days: 250
+  timezone: Asia/Seoul
+  price_precision: 4
+
+indicators:
+  ma_windows: [5, 10, 20, 60, 112, 224]
+  volume_avg_windows: [20, 60]
+
+pattern1:
+  # 연중 최저 이후 최소 반등폭 (연중 최저 대비)
+  min_rebound_pct: 0.08
+
+  # 페이크 상승(급등) 정의
+  fake_breakout:
+    min_up_candle_pct: 0.06          # 당일 종가 기준 +6% 이상 양봉
+    volume_ratio_min: 0.80           # (옵션) 20일 평균 대비 0.8배 이상이면 신뢰도↑
+    lookback_days_after_low: 60      # 최저점 이후 60일 이내 페이크 발생 탐색
+
+  # 매집(횡보) 구간 정의
+  accumulation:
+    days_range: [10, 25]             # 10~25 거래일
+    max_box_pct: 0.10                # 박스폭(고가-저가)/중간값 ≤ 10%
+    higher_low_required: true        # 저점 상승(또는 유지) 요구
+    allow_wick_noise_pct: 0.02       # 꼬리 노이즈 허용(박스 하단 2%)
+
+  # 이평선 수렴/정렬
+  ma_convergence:
+    enabled: true
+    max_spread_ratio: 0.03           # MA5~MA60 간 최대 이격률 3% 이내
+    prefer_ma112_flat: true          # 112일선 기울기 완만 선호
+    ma112_slope_abs_max: 0.002       # 112일선 일별 기울기 절대값 상한(근사)
+
+  # 거래량 압축(관심 소멸) 정의
+  volume_compression:
+    enabled: true
+    max_ratio_to_volavg20: 1.00      # 매집 구간 평균 거래량 ≤ vol_avg_20
+    downtrend_required: true         # 매집 기간 중 거래량 추세 감소 선호
+
+  # 손절/익절 시나리오
+  risk:
+    stop_loss:
+      type: yearly_low_close         # 연중 최저 종가 이탈
+      confirm_days: 0                # 0이면 즉시, 1이면 다음날 확인
+    take_profit:
+      partial_1:
+        trigger: ma112_break
+        size_pct: 0.30
+      partial_2:
+        trigger: ma224_touch
+        size_pct: 0.30
+      final:
+        trigger: volume_climax
+        size_pct: 0.40
+
+pattern2:
+  ma_cross:
+    fast: 5
+    mid: 10
+    slow: 20
+
+  # 조용한 상승(거래량 평균 이하)
+  quiet_volume:
+    max_ratio_to_volavg20: 1.00
+
+  # 최저점 이후 상승 상태(간단 proxy)
+  above_yearly_low_pct: 0.05         # 최저점 대비 +5% 이상
+
+  # 목표 수익/청산 트리거
+  risk:
+    target_profit_pct: 0.20
+    sell_on_volume_climax_ratio: 3.0 # 20일 평균 대비 3배면 '매도 알림'
+
+pattern3:
+  # 신규상장 저점 반등형
+  
+  # IPO 조건
+  ipo:
+    max_days_since_listing: 365      # 상장 후 최대 365일 (1년) 이내
+    max_shares_outstanding: 10000000  # 상장주식수 1천만주 이하 (소형주)
+  
+  # 최저점 형성 및 방어
+  bottom_formation:
+    min_decline_from_high_pct: 0.20  # 상장 후 고점 대비 최소 20% 하락
+    bottom_hold_days: 10              # 최저점 이후 유지 기간 (최소 10일)
+    max_drawdown_from_bottom: 0.05   # 최저점 대비 최대 5% 하락 허용
+  
+  # 방향 전환 확인
+  trend_reversal:
+    min_recovery_pct: 0.10           # 최저점 대비 최소 10% 회복
+    ma_cross_required: true          # MA5 > MA10 크로스 필요
+    volume_increase_ratio: 1.5       # 반등 시 거래량 평균 1.5배 이상
+  
+  # 손절/익절
+  risk:
+    stop_loss:
+      type: listing_low_break        # 상장 후 최저점 이탈
+      confirm_days: 0
+    target_profit_pct: 0.30          # 목표 수익 30%
+    sell_on_volume_climax_ratio: 3.0
+
+volume_triggers:
+  start_signal:
+    ratio_to_volavg20: 2.0
+    require_close_above_mas: [20, 60]
+  sell_signal:
+    ratio_to_volavg20: 3.0
+
+checklist:
+  # YES/NO 체크와 점수화
+  weights:
+    yearly_low: 25
+    fake_breakout: 15
+    structure_hold: 25
+    ma_alignment: 15
+    volume_compression: 20
+  thresholds:
+    watch_strong: 80
+    watch_conditional: 60
+
+backtest:
+  # 실행 규칙(주문 실행 아님, 시그널 기반 성과 측정)
+  commission_bps: 10                 # 0.10%
+  slippage_bps: 10                   # 0.10%
+  max_holding_days:
+    p1: 120
+    p2: 30
+  entry:
+    # 분할 매수는 '구간 태그'만 기록(실제 주문 아님)
+    p1_tranches: ["box_low", "ma20_support", "ma60_support"]
+    p2_tranches: ["ma5_support"]
+  exit:
+    # 패턴별 기본 청산 규칙(리포트용)
+    p1_default: ["ma112_break", "ma224_touch", "volume_climax", "stop_loss"]
+    p2_default: ["profit_target", "volume_climax", "stop_loss"]
