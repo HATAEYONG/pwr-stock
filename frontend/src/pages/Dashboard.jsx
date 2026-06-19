@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Grid, 
-  Card, 
-  CardContent, 
-  Typography, 
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import {
+  Grid,
+  Card,
+  CardContent,
+  Typography,
   Box,
   CircularProgress,
   Chip,
@@ -26,6 +26,9 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { getHighScoreEvaluations, getSignalEvaluations } from '../services/api';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Dashboard');
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -38,11 +41,7 @@ function Dashboard() {
   });
   const [activeStep, setActiveStep] = useState(0);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       const [highScoreRes, startRes, riskRes, sellRes] = await Promise.all([
         getHighScoreEvaluations(),
@@ -57,14 +56,19 @@ function Dashboard() {
         riskSignals: riskRes.data.length,
         sellSignals: sellRes.data.length
       });
+      logger.info('Dashboard data loaded successfully', stats);
     } catch (error) {
-      console.error('데이터 로드 실패:', error);
+      logger.error('데이터 로드 실패:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const steps = [
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const steps = useMemo(() => [
     {
       label: '종목 관리',
       description: '종목을 검색하고 등록합니다.',
@@ -89,7 +93,7 @@ function Dashboard() {
       icon: <Notifications />,
       action: () => navigate('/alerts')
     }
-  ];
+  ], [navigate]);
 
   if (loading) {
     return (

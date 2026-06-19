@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -23,10 +23,12 @@ import {
   Search as SearchIcon,
   CloudDownload as DownloadIcon
 } from '@mui/icons-material';
-import { 
-  getSymbols, 
-  fetchKiwoomStocks, 
-  fetchNasdaqStocks 
+import {
+  getSymbols,
+  fetchKiwoomStocks,
+  fetchNasdaqStocks,
+  getKiwoomRestConfig,
+  searchKiwoomStocks
 } from '../services/api';
 
 function SymbolSearch() {
@@ -36,19 +38,88 @@ function SymbolSearch() {
   const [searched, setSearched] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [kiwoomRestConfig, setKiwoomRestConfig] = useState(null);
+  const [useKiwoomSearch, setUseKiwoomSearch] = useState(false);
+  const [kiwoomSearchResults, setKiwoomSearchResults] = useState([]);
+
+  // Kiwoom REST API 설정 로드
+  useEffect(() => {
+    const fetchKiwoomConfig = async () => {
+      try {
+        const response = await getKiwoomRestConfig();
+        setKiwoomRestConfig(response.data);
+        // API가 연결된 경우 자동으로 Kiwoom 검색 사용
+        if (response.data.has_api_key) {
+          setUseKiwoomSearch(true);
+        }
+      } catch (error) {
+        console.error('Kiwoom REST API 설정 조회 실패:', error);
+      }
+    };
+    fetchKiwoomConfig();
+  }, []);
 
   const handleSearch = async () => {
     setLoading(true);
     setSearched(true);
-    try {
-      const response = await getSymbols({ search: searchTerm });
-      setSymbols(response.data.results || response.data);
-    } catch (error) {
-      console.error('검색 실패:', error);
-      setSymbols([]);
-    } finally {
-      setLoading(false);
+
+    // Kiwoom REST API 검색 (API 연결 시 우선)
+    if (useKiwoomSearch && kiwoomRestConfig?.has_api_key) {
+      try {
+        const response = await searchKiwoomStocks(searchTerm);
+        const results = response.data.results || response.data;
+
+        // Kiwoom 검색 결과 변환
+        const transformedResults = results.map(stock => ({
+          id: stock.symbol,
+          ticker: stock.symbol,
+          name: stock.name,
+          exchange: stock.market || 'KOSPI',
+          sector: '-',
+          is_active: true,
+          listing_date: '-',
+          shares_outstanding: null,
+          source: 'kiwoom_api'
+        }));
+
+        setKiwoomSearchResults(transformedResults);
+
+        // 로컬 DB에서도 검색 (병합)
+        try {
+          const localResponse = await getSymbols({ search: searchTerm });
+          setSymbols(localResponse.data.results || localResponse.data);
+        } catch (localError) {
+          console.error('로컬 DB 검색 실패:', localError);
+          setSymbols([]);
+        }
+      } catch (error) {
+        console.error('Kiwoom API 검색 실패:', error);
+        setSnackbar({
+          open: true,
+          message: 'Kiwoom API 검색 실패: ' + (error.response?.data?.error || error.message),
+          severity: 'error'
+        });
+        // 실패 시 로컬 DB로 fallback
+        try {
+          const response = await getSymbols({ search: searchTerm });
+          setSymbols(response.data.results || response.data);
+        } catch (localError) {
+          console.error('로컬 DB 검색 실패:', localError);
+          setSymbols([]);
+        }
+      }
+    } else {
+      // 로컬 DB 검색만
+      try {
+        const response = await getSymbols({ search: searchTerm });
+        setSymbols(response.data.results || response.data);
+      } catch (error) {
+        console.error('검색 실패:', error);
+        setSymbols([]);
+      }
     }
+
+    setLoading(false);
   };
 
   const handleKeyPress = (e) => {
@@ -114,6 +185,37 @@ function SymbolSearch() {
       <Alert severity="info" sx={{ mb: 3 }}>
         <strong>Step 1:</strong> 종목 티커(Ticker) 또는 이름으로 검색하거나, API로 자동 수집하세요.
       </Alert>
+
+      {/* Kiwoom REST API 연결 상태 */}
+      {kiwoomRestConfig && (
+        <Alert
+          severity={kiwoomRestConfig.has_api_key ? "success" : "warning"}
+          sx={{ mb: 3 }}
+          action={
+            kiwoomRestConfig.has_api_key && (
+              <Chip
+                label={useKiwoomSearch ? "Kiwoom API 검색 사용 중" : "로컬 DB 검색"}
+                size="small"
+                onClick={() => setUseKiwoomSearch(!useKiwoomSearch)}
+                sx={{ cursor: 'pointer' }}
+              />
+            )
+          }
+        >
+          <Typography variant="body2">
+            <strong>키움 REST API 상태:</strong> {
+              kiwoomRestConfig.has_api_key
+                ? `연결됨 (${kiwoomRestConfig.mode} 모드)`
+                : '미연결 (API 키가 설정되지 않음)'
+            }
+            {kiwoomRestConfig.has_api_key && (
+              <Typography variant="caption" component="div" sx={{ mt: 0.5 }}>
+                실시간 종목 검색 가능 - 검색 시 키움 API에서 종목 정보를 가져옵니다.
+              </Typography>
+            )}
+          </Typography>
+        </Alert>
+      )}
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={6}>
@@ -260,13 +362,82 @@ function SymbolSearch() {
       </Paper>
 
       {searched && (
-        <Paper>
-          <Box p={2}>
-            <Typography variant="h6" gutterBottom>
-              검색 결과: {symbols.length}개
-            </Typography>
-          </Box>
-          
+        <>
+          {/* Kiwoom API 검색 결과 */}
+          {kiwoomSearchResults.length > 0 && (
+            <Paper sx={{ mb: 2 }}>
+              <Box p={2} sx={{ bgcolor: 'success.light' }}>
+                <Typography variant="h6" gutterBottom>
+                  🔗 키움 API 실시간 검색 결과: {kiwoomSearchResults.length}개
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  키움증권 REST API에서 가져온 최신 종목 정보입니다.
+                </Typography>
+              </Box>
+
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>티커</TableCell>
+                      <TableCell>종목명</TableCell>
+                      <TableCell>거래소</TableCell>
+                      <TableCell>상태</TableCell>
+                      <TableCell>데이터 소스</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {kiwoomSearchResults.map((stock) => (
+                      <TableRow key={`kiwoom-${stock.id}`} sx={{ bgcolor: 'action.hover' }}>
+                        <TableCell>
+                          <Typography fontWeight="bold" color="primary">
+                            {stock.ticker}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{stock.name}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={stock.exchange}
+                            size="small"
+                            color={stock.exchange === 'KOSDAQ' ? 'success' : 'primary'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label="실시간"
+                            color="success"
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label="키움 API"
+                            size="small"
+                            color="info"
+                            variant="outlined"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          )}
+
+          {/* 로컬 DB 검색 결과 */}
+          <Paper>
+            <Box p={2}>
+              <Typography variant="h6" gutterBottom>
+                {kiwoomSearchResults.length > 0 ? '📁 로컬 DB 검색 결과' : '검색 결과'}: {symbols.length}개
+              </Typography>
+              {kiwoomSearchResults.length > 0 && (
+                <Typography variant="caption" color="text.secondary">
+                  데이터베이스에 저장된 종목 정보입니다.
+                </Typography>
+              )}
+            </Box>
+
           <TableContainer>
             <Table>
               <TableHead>
@@ -290,7 +461,7 @@ function SymbolSearch() {
                     </TableCell>
                     <TableCell>{symbol.name}</TableCell>
                     <TableCell>
-                      <Chip 
+                      <Chip
                         label={symbol.exchange}
                         size="small"
                         color={
@@ -330,6 +501,7 @@ function SymbolSearch() {
             </Box>
           )}
         </Paper>
+        </>
       )}
 
       <Box mt={4}>

@@ -34,16 +34,21 @@ function BacktestResults() {
   const loadResults = async () => {
     setLoading(true);
     try {
-      let url = 'http://localhost:8000/api/backtest/';
-      
-      if (strategyFilter !== 'all') {
-        url = `http://localhost:8000/api/backtest/by_strategy/?strategy=${strategyFilter}`;
-      }
+      let url = 'http://localhost:8000/api/backtest/results/';
 
       const response = await axios.get(url);
-      setResults(response.data.results || response.data);
+
+      // DRF pagination 응답 처리
+      if (response.data.results) {
+        setResults(response.data.results);
+      } else if (Array.isArray(response.data)) {
+        setResults(response.data);
+      } else {
+        setResults([]);
+      }
     } catch (error) {
       console.error('결과 로드 실패:', error);
+      setResults([]);
     } finally {
       setLoading(false);
     }

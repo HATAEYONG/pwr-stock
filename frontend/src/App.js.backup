@@ -1,0 +1,892 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Box,
+  Button,
+  Menu,
+  MenuItem,
+  Fade,
+  IconButton,
+  Divider,
+  alpha
+} from '@mui/material';
+import {
+  Dashboard as DashboardIcon,
+  CloudUpload,
+  Analytics as AnalyticsIcon,
+  Notifications,
+  TrendingUp,
+  ShowChart,
+  Api,
+  Science as ScienceIcon
+} from '@mui/icons-material';
+import { motion } from 'framer-motion';
+
+// Pages
+import Dashboard from './pages/Dashboard';
+import SymbolSearch from './pages/SymbolSearch';
+import SymbolManagement from './pages/SymbolManagement';
+import DataImport from './pages/DataImport';
+import ImageAnalysis from './pages/ImageAnalysis';
+import AnalysisRunner from './pages/AnalysisRunner';
+import EvaluationsList from './pages/EvaluationsList';
+import EvaluationDetail from './pages/EvaluationDetail';
+import PatternView from './pages/PatternView';
+import Alerts from './pages/Alerts';
+import PatternSearch from './pages/PatternSearch';
+import BacktestRun from './pages/BacktestRun';
+import BacktestResults from './pages/BacktestResults';
+import AlertSettings from './pages/AlertSettings';
+import TechnicalDashboard from './pages/TechnicalDashboard';
+import BacktestRunner from './pages/BacktestRunner';
+import BacktestList from './pages/BacktestList';
+import BatchPatternAnalysis from './pages/BatchPatternAnalysis';
+import BacktestResult from './pages/BacktestResult';
+import PortfolioDashboard from './pages/PortfolioDashboard';
+import MLPredictions from './pages/MLPredictions';
+import MarketDashboard from './pages/MarketDashboard';
+import TimeframeAnalysis from './pages/TimeframeAnalysis';
+import RealtimeDashboard from './pages/RealtimeDashboard';
+import BacktestReportDownload from './pages/BacktestReportDownload';
+import KiwoomApiIntegration from './pages/KiwoomApiIntegration';
+import NasdaqApiIntegration from './pages/NasdaqApiIntegration';
+import KoreanInvestmentAPI from './pages/KoreanInvestmentAPI';
+import DataUploadPage from './components/upload/DataUploadPage';
+import OntologyModel from './pages/OntologyModel';
+import KnowledgeGraph from './pages/KnowledgeGraph';
+import RelationshipGraph from './pages/RelationshipGraph';
+import InferenceEngine from './pages/InferenceEngine';
+import SparqlQuery from './pages/SparqlQuery';
+import SemanticTriples from './pages/SemanticTriples';
+import PatternAnalysis from './pages/PatternAnalysis';
+import RealtimeData from './pages/RealtimeData';
+import KiwoomRestApi from './pages/KiwoomRestApi';
+import KiwoomApiSettings from './pages/KiwoomApiSettings';
+import OHLCVViewer from './pages/OHLCVViewer';
+import DataCollector from './pages/DataCollector';
+import RealtimePatternMonitor from './pages/RealtimePatternMonitor';
+import StockScreening from './pages/StockScreening';
+
+function App() {
+  const [dataMenuAnchor, setDataMenuAnchor] = React.useState(null);
+  const [analysisMenuAnchor, setAnalysisMenuAnchor] = React.useState(null);
+  const [monitoringMenuAnchor, setMonitoringMenuAnchor] = React.useState(null);
+  const [advancedMenuAnchor, setAdvancedMenuAnchor] = React.useState(null);
+  const [apiMenuAnchor, setApiMenuAnchor] = React.useState(null);
+  const [ontologyMenuAnchor, setOntologyMenuAnchor] = React.useState(null);
+
+  // Scenario 1: 데이터 관리
+  const handleDataMenuOpen = (event) => {
+    setDataMenuAnchor(event.currentTarget);
+  };
+
+  const handleDataMenuClose = () => {
+    setDataMenuAnchor(null);
+  };
+
+  // Scenario 2: 분석 및 백테스팅
+  const handleAnalysisMenuOpen = (event) => {
+    setAnalysisMenuAnchor(event.currentTarget);
+  };
+
+  const handleAnalysisMenuClose = () => {
+    setAnalysisMenuAnchor(null);
+  };
+
+  // Scenario 3: 실시간 모니터링
+  const handleMonitoringMenuOpen = (event) => {
+    setMonitoringMenuAnchor(event.currentTarget);
+  };
+
+  const handleMonitoringMenuClose = () => {
+    setMonitoringMenuAnchor(null);
+  };
+
+  // Scenario 4: 고급 기능
+  const handleAdvancedMenuOpen = (event) => {
+    setAdvancedMenuAnchor(event.currentTarget);
+  };
+
+  const handleAdvancedMenuClose = () => {
+    setAdvancedMenuAnchor(null);
+  };
+
+  // Scenario 5: API 연동
+  const handleApiMenuOpen = (event) => {
+    setApiMenuAnchor(event.currentTarget);
+  };
+
+  const handleApiMenuClose = () => {
+    setApiMenuAnchor(null);
+  };
+
+  // Scenario 6: 온톨로지
+  const handleOntologyMenuOpen = (event) => {
+    setOntologyMenuAnchor(event.currentTarget);
+  };
+
+  const handleOntologyMenuClose = () => {
+    setOntologyMenuAnchor(null);
+  };
+
+  return (
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Box sx={{ flexGrow: 1 }}>
+        <AppBar
+          position="static"
+          sx={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+            boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <Toolbar sx={{ minHeight: 80, px: 3 }}>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+              whileHover={{ rotate: 360 }}
+              style={{ marginRight: 16 }}
+            >
+              <TrendingUp sx={{ fontSize: 42, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }} />
+            </motion.div>
+
+            <Typography
+              variant="h5"
+              component="div"
+              sx={{
+                flexGrow: 1,
+                fontSize: 26,
+                fontWeight: 800,
+                letterSpacing: 1,
+                textShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                background: 'linear-gradient(45deg, #ffffff, #f0f0f0)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              Pattern Trading System
+            </Typography>
+
+            <Button
+              color="inherit"
+              component={Link}
+              to="/"
+              startIcon={<DashboardIcon />}
+              sx={{
+                mx: 0.5,
+                fontSize: 15,
+                fontWeight: 700,
+                px: 2.5,
+                py: 1,
+                borderRadius: 3,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                },
+              }}
+            >
+              대시보드
+            </Button>
+
+            {/* Scenario 1: 데이터 관리 */}
+            <Button
+              color="inherit"
+              onClick={handleDataMenuOpen}
+              startIcon={<CloudUpload />}
+              sx={{
+                mx: 0.5,
+                fontSize: 15,
+                fontWeight: 700,
+                px: 2.5,
+                py: 1,
+                borderRadius: 3,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                },
+              }}
+            >
+              1. 데이터 관리
+            </Button>
+            <Menu
+              anchorEl={dataMenuAnchor}
+              open={Boolean(dataMenuAnchor)}
+              onClose={handleDataMenuClose}
+              TransitionComponent={Fade}
+              sx={{
+                '& .MuiPaper-root': {
+                  mt: 2,
+                  borderRadius: 3,
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  backdropFilter: 'blur(20px)',
+                  minWidth: 280,
+                }
+              }}
+            >
+              <MenuItem
+                component={Link}
+                to="/symbols/search"
+                onClick={handleDataMenuClose}
+                sx={{
+                  fontSize: 15,
+                  py: 1.5,
+                  px: 2,
+                  borderRadius: 2,
+                  mx: 1,
+                  my: 0.5,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: alpha('#667eea', 0.1),
+                    transform: 'translateX(4px)',
+                  },
+                }}
+              >
+                🔍 종목 찾기/검색
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/symbols/manage"
+                onClick={handleDataMenuClose}
+                sx={{
+                  fontSize: 15,
+                  py: 1.5,
+                  px: 2,
+                  borderRadius: 2,
+                  mx: 1,
+                  my: 0.5,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: alpha('#667eea', 0.1),
+                    transform: 'translateX(4px)',
+                  },
+                }}
+              >
+                📋 종목 관리
+              </MenuItem>
+              <Divider sx={{ my: 1, mx: 2 }} />
+              <MenuItem
+                component={Link}
+                to="/data/import"
+                onClick={handleDataMenuClose}
+                sx={{
+                  fontSize: 15,
+                  py: 1.5,
+                  px: 2,
+                  borderRadius: 2,
+                  mx: 1,
+                  my: 0.5,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: alpha('#667eea', 0.1),
+                    transform: 'translateX(4px)',
+                  },
+                }}
+              >
+                📥 데이터 Import
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/upload"
+                onClick={handleDataMenuClose}
+                sx={{
+                  fontSize: 15,
+                  py: 1.5,
+                  px: 2,
+                  borderRadius: 2,
+                  mx: 1,
+                  my: 0.5,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: alpha('#667eea', 0.1),
+                    transform: 'translateX(4px)',
+                  },
+                }}
+              >
+                📁 파일 업로드
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/image-analysis"
+                onClick={handleDataMenuClose}
+                sx={{
+                  fontSize: 15,
+                  py: 1.5,
+                  px: 2,
+                  borderRadius: 2,
+                  mx: 1,
+                  my: 0.5,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: alpha('#667eea', 0.1),
+                    transform: 'translateX(4px)',
+                  },
+                }}
+              >
+                🖼️ 이미지 분석
+              </MenuItem>
+              <Divider sx={{ my: 1, mx: 2 }} />
+              <MenuItem
+                component={Link}
+                to="/data-collector"
+                onClick={handleDataMenuClose}
+                sx={{
+                  fontSize: 15,
+                  py: 1.5,
+                  px: 2,
+                  borderRadius: 2,
+                  mx: 1,
+                  my: 0.5,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: alpha('#667eea', 0.1),
+                    transform: 'translateX(4px)',
+                  },
+                  background: alpha('#667eea', 0.05),
+                }}
+              >
+                📊 키움 데이터 수집
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/ohlcv-viewer"
+                onClick={handleDataMenuClose}
+                sx={{
+                  fontSize: 15,
+                  py: 1.5,
+                  px: 2,
+                  borderRadius: 2,
+                  mx: 1,
+                  my: 0.5,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: alpha('#667eea', 0.1),
+                    transform: 'translateX(4px)',
+                  },
+                }}
+              >
+                📈 OHLCV 데이터 조회
+              </MenuItem>
+            </Menu>
+
+            {/* Scenario 2: 분석 및 백테스팅 */}
+            <Button
+              color="inherit"
+              onClick={handleAnalysisMenuOpen}
+              startIcon={<AnalyticsIcon />}
+              sx={{
+                mx: 0.5,
+                fontSize: 15,
+                fontWeight: 700,
+                px: 2.5,
+                py: 1,
+                borderRadius: 3,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                },
+              }}
+            >
+              2. 분석 및 백테스팅
+            </Button>
+            <Menu
+              anchorEl={analysisMenuAnchor}
+              open={Boolean(analysisMenuAnchor)}
+              onClose={handleAnalysisMenuClose}
+              TransitionComponent={Fade}
+              sx={{
+                '& .MuiPaper-root': {
+                  mt: 2,
+                  borderRadius: 3,
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  backdropFilter: 'blur(20px)',
+                  minWidth: 280,
+                }
+              }}
+            >
+              <MenuItem
+                component={Link}
+                to="/pattern-analysis"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📊 종목별 패턴 분석
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/pattern-search"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🔍 패턴 기반 종목 찾기
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/batch-analysis"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📊 전체 종목 일괄 분석
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/analysis/run"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🚀 분석 실행
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/technical"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📈 기술적 지표
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/evaluations"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📋 전체 결과
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/patterns/P1"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                Pattern 1 (매집형)
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/patterns/P2"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                Pattern 2 (추세전환)
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/patterns/P3"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                Pattern 3 (IPO반등)
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/backtest/run"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📊 백테스팅 실행
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/backtest/results"
+                onClick={handleAnalysisMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📈 백테스팅 결과
+              </MenuItem>
+            </Menu>
+
+            {/* Scenario 3: 실시간 모니터링 */}
+            <Button
+              color="inherit"
+              onClick={handleMonitoringMenuOpen}
+              startIcon={<Notifications sx={{ fontSize: 20 }} />}
+              sx={{
+                fontSize: 15,
+                fontWeight: 600,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+              }}
+            >
+              3. 실시간 모니터링
+            </Button>
+            <Menu
+              anchorEl={monitoringMenuAnchor}
+              open={Boolean(monitoringMenuAnchor)}
+              onClose={handleMonitoringMenuClose}
+              sx={{
+                '& .MuiPaper-root': {
+                  mt: 1,
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }
+              }}
+            >
+              <MenuItem
+                component={Link}
+                to="/realtime-monitor"
+                onClick={handleMonitoringMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📡 실시간 패턴 모니터링
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/stock-screening"
+                onClick={handleMonitoringMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🔍 검색식 (스크리닝)
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/alerts"
+                onClick={handleMonitoringMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📋 알림 내역
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/alerts/settings"
+                onClick={handleMonitoringMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                ⚙️ 알림 설정
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/realtime"
+                onClick={handleMonitoringMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📡 실시간 시세 대시보드
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/realtime-data"
+                onClick={handleMonitoringMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📊 실시간 데이터 수집
+              </MenuItem>
+            </Menu>
+
+            {/* Scenario 4: 고급 기능 */}
+            <Button
+              color="inherit"
+              onClick={handleAdvancedMenuOpen}
+              startIcon={<ShowChart sx={{ fontSize: 20 }} />}
+              sx={{
+                fontSize: 15,
+                fontWeight: 600,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+              }}
+            >
+              4. 고급 기능
+            </Button>
+            <Menu
+              anchorEl={advancedMenuAnchor}
+              open={Boolean(advancedMenuAnchor)}
+              onClose={handleAdvancedMenuClose}
+              sx={{
+                '& .MuiPaper-root': {
+                  mt: 1,
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }
+              }}
+            >
+              <MenuItem
+                component={Link}
+                to="/portfolio"
+                onClick={handleAdvancedMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                💼 포트폴리오 관리
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/ml-predictions"
+                onClick={handleAdvancedMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🤖 AI/ML 예측
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/market"
+                onClick={handleAdvancedMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📊 시장 지수 대시보드
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/timeframe"
+                onClick={handleAdvancedMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                ⏰ 시간대별 분석
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/report-download"
+                onClick={handleAdvancedMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📥 리포트 다운로드
+              </MenuItem>
+            </Menu>
+
+            {/* Scenario 5: API 연동 */}
+            <Button
+              color="inherit"
+              onClick={handleApiMenuOpen}
+              startIcon={<Api sx={{ fontSize: 20 }} />}
+              sx={{
+                fontSize: 15,
+                fontWeight: 600,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+              }}
+            >
+              5. API 연동
+            </Button>
+            <Menu
+              anchorEl={apiMenuAnchor}
+              open={Boolean(apiMenuAnchor)}
+              onClose={handleApiMenuClose}
+              sx={{
+                '& .MuiPaper-root': {
+                  mt: 1,
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }
+              }}
+            >
+              <MenuItem
+                component={Link}
+                to="/kiwoom-api"
+                onClick={handleApiMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🔌 키움 OCX API 연동
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/kiwoom-rest-api"
+                onClick={handleApiMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🌐 키움 REST API 연동
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/kiwoom-api-settings"
+                onClick={handleApiMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                ⚙️ 키움 API 설정
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/koreainvestment-api"
+                onClick={handleApiMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🇰🇷 한국투자증권 API
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/nasdaq-api"
+                onClick={handleApiMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🇺🇸 나스닥 Polygon.io API
+              </MenuItem>
+            </Menu>
+
+            {/* Scenario 6: 온톨로지 */}
+            <Button
+              color="inherit"
+              onClick={handleOntologyMenuOpen}
+              startIcon={<ScienceIcon sx={{ fontSize: 20 }} />}
+              sx={{
+                fontSize: 15,
+                fontWeight: 600,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+              }}
+            >
+              6. 온톨로지
+            </Button>
+            <Menu
+              anchorEl={ontologyMenuAnchor}
+              open={Boolean(ontologyMenuAnchor)}
+              onClose={handleOntologyMenuClose}
+              sx={{
+                '& .MuiPaper-root': {
+                  mt: 1,
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }
+              }}
+            >
+              <MenuItem
+                component={Link}
+                to="/ontology/model"
+                onClick={handleOntologyMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🔬 온톨로지 모델
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/ontology/knowledge-graph"
+                onClick={handleOntologyMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🕸️ 지식 그래프
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/ontology/relationship-graph"
+                onClick={handleOntologyMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📊 관계 그래프
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/ontology/inference"
+                onClick={handleOntologyMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                🧠 추론 엔진
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/ontology/sparql"
+                onClick={handleOntologyMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                💻 SPARQL 쿼리
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/ontology/triples"
+                onClick={handleOntologyMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📦 시맨틱 트리플
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/ontology/pattern-analysis"
+                onClick={handleOntologyMenuClose}
+                sx={{ fontSize: 14, py: 1.5 }}
+              >
+                📈 주식 패턴 분석
+              </MenuItem>
+            </Menu>
+          </Toolbar>
+        </AppBar>
+        
+        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            
+            {/* 종목 관리 */}
+            <Route path="/symbols/search" element={<SymbolSearch />} />
+            <Route path="/symbols/manage" element={<SymbolManagement />} />
+            
+            {/* 데이터 관리 */}
+            <Route path="/data/import" element={<DataImport />} />
+            <Route path="/upload" element={<DataUploadPage />} />
+            <Route path="/image-analysis" element={<ImageAnalysis />} />
+
+            {/* 패턴 분석 */}
+            <Route path="/pattern-search" element={<PatternSearch />} />
+            <Route path="/batch-analysis" element={<BatchPatternAnalysis />} />
+            <Route path="/ohlcv-viewer" element={<OHLCVViewer />} />
+            <Route path="/analysis/run" element={<AnalysisRunner />} />
+            <Route path="/evaluations" element={<EvaluationsList />} />
+            <Route path="/evaluations/:id" element={<EvaluationDetail />} />
+            <Route path="/patterns/:patternType" element={<PatternView />} />
+            <Route path="/technical" element={<TechnicalDashboard />} />
+            
+            {/* 백테스팅 */}
+            <Route path="/backtest/run" element={<BacktestRun />} />
+            <Route path="/backtest/results" element={<BacktestResults />} />
+            
+            {/* 트리거 알림 */}
+            <Route path="/alerts" element={<Alerts />} />
+            <Route path="/alerts/settings" element={<AlertSettings />} />
+
+            {/* 고도화 기능 */}
+            <Route path="/portfolio" element={<PortfolioDashboard />} />
+            <Route path="/ml-predictions" element={<MLPredictions />} />
+            <Route path="/market" element={<MarketDashboard />} />
+            <Route path="/timeframe" element={<TimeframeAnalysis />} />
+            <Route path="/realtime" element={<RealtimeDashboard />} />
+            <Route path="/report-download" element={<BacktestReportDownload />} />
+
+            {/* 키움 OpenAPI */}
+            <Route path="/kiwoom-api" element={<KiwoomApiIntegration />} />
+            <Route path="/kiwoom-rest-api" element={<KiwoomRestApi />} />
+            <Route path="/kiwoom-api-settings" element={<KiwoomApiSettings />} />
+            <Route path="/realtime-data" element={<RealtimeData />} />
+
+            {/* 한국투자증권 API */}
+            <Route path="/koreainvestment-api" element={<KoreanInvestmentAPI />} />
+
+            {/* 나스닥 API */}
+            <Route path="/nasdaq-api" element={<NasdaqApiIntegration />} />
+
+            {/* 온톨로지 */}
+            <Route path="/ontology/model" element={<OntologyModel />} />
+            <Route path="/ontology/knowledge-graph" element={<KnowledgeGraph />} />
+            <Route path="/ontology/relationship-graph" element={<RelationshipGraph />} />
+            <Route path="/ontology/inference" element={<InferenceEngine />} />
+            <Route path="/ontology/sparql" element={<SparqlQuery />} />
+            <Route path="/ontology/triples" element={<SemanticTriples />} />
+            <Route path="/ontology/pattern-analysis" element={<PatternAnalysis />} />
+
+            {/* 종목별 패턴 분석 (새 메뉴) */}
+            <Route path="/pattern-analysis" element={<PatternAnalysis />} />
+
+            {/* Phase 3: 키움 데이터 수집 및 실시간 모니터링 */}
+            <Route path="/data-collector" element={<DataCollector />} />
+            <Route path="/realtime-monitor" element={<RealtimePatternMonitor />} />
+            <Route path="/stock-screening" element={<StockScreening />} />
+          </Routes>
+        </Container>
+      </Box>
+    </Router>
+  );
+}
+
+export default App;

@@ -21,7 +21,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.market.urls')),
     path('api/kiwoom/', include('apps.kiwoom.urls')),
+    path('api/patterns/', include('apps.patterns.urls')),  # Pattern analysis API
     path('api/backtest/', include('apps.backtest.urls')),
     path('api/alerts/', include('apps.alerts.urls')),
+    path('api/portfolio/', include('apps.portfolio.urls')),
+    path('api/ingest/', include('apps.ingest.urls')),  # Agent data ingestion
+    path('api/ml/', include('apps.ml.urls')),  # Machine Learning API (PR-13)
+    path('api/ontology/', include('apps.ontology.urls')),  # Ontology API (PR-16)
+    # path('api/realtime/', include('apps.realtime.urls')),  # Real-time data API (Polygon) 비활성화
+    path('api/config/', include('apps.config.urls')),  # API 설정 관리
+    path('api/system/', include('apps.common.urls')),  # 시스템 헬스체크 (P3)
     path('api-auth/', include('rest_framework.urls')),
 ]

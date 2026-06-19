@@ -38,7 +38,7 @@ function PatternSearch() {
 
   // 검색 조건
   const [pattern, setPattern] = useState('all'); // all, P1, P2, P3
-  const [minScore, setMinScore] = useState(70);
+  const [minScore, setMinScore] = useState(0);
   const [exchange, setExchange] = useState({
     kosdaq: true,
     kospi: true,
@@ -200,9 +200,10 @@ function PatternSearch() {
                 valueLabelDisplay="auto"
               />
               <Typography variant="caption" color="textSecondary">
-                {minScore >= 80 ? '우수 (80점 이상)' : 
-                 minScore >= 60 ? '양호 (60-79점)' : 
-                 '전체 (0-59점)'}
+                {minScore >= 80 ? '우수 (80점 이상)' :
+                 minScore >= 60 ? '양호 (60-79점)' :
+                 minScore > 0 ? '전체 (1-59점)' :
+                 '모든 점수 (0점 포함)'}
               </Typography>
             </FormControl>
           </Grid>
@@ -391,18 +392,18 @@ function PatternSearch() {
                   <TableRow key={evaluation.id}>
                     <TableCell>
                       <Typography fontWeight="bold">
-                        {evaluation.symbol?.ticker}
+                        {evaluation.symbol_ticker}
                       </Typography>
                     </TableCell>
-                    <TableCell>{evaluation.symbol?.name}</TableCell>
+                    <TableCell>{evaluation.symbol_name}</TableCell>
                     <TableCell>
-                      <Chip 
-                        label={evaluation.symbol?.exchange}
+                      <Chip
+                        label={evaluation.exchange}
                         size="small"
                         color={
-                          evaluation.symbol?.exchange === 'NASDAQ' ? 'info' :
-                          evaluation.symbol?.exchange === 'NYSE' ? 'secondary' :
-                          evaluation.symbol?.exchange === 'KOSDAQ' ? 'success' : 'primary'
+                          evaluation.exchange === 'NASDAQ' ? 'info' :
+                          evaluation.exchange === 'NYSE' ? 'secondary' :
+                          evaluation.exchange === 'KOSDAQ' ? 'success' : 'primary'
                         }
                       />
                     </TableCell>
@@ -415,8 +416,8 @@ function PatternSearch() {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={`${evaluation.score}점`}
-                        color={getScoreColor(evaluation.score)}
+                        label={`${evaluation.checklist_score}점`}
+                        color={getScoreColor(evaluation.checklist_score)}
                         size="small"
                       />
                     </TableCell>

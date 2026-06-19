@@ -15,20 +15,49 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / '.env')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+import os
+
+
+# ============================================================
+# 보안 설정 (P0)
+# ============================================================
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-p@*4c=lqigwwbfvv42(d#2uo(&y!ffgvg3zsk&ub6h23y0@4kz'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if os.environ.get('DJANGO_DEBUG', 'False') == 'True':
+        # 개발 환경에서만 기본 키 사용
+        SECRET_KEY = 'django-insecure-dev-mode-only-change-in-production'
+    else:
+        raise ValueError(
+            "DJANGO_SECRET_KEY environment variable is not set. "
+            "Please set it in your .env file or environment."
+        )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get(
+    'DJANGO_ALLOWED_HOSTS',
+    'localhost,127.0.0.1'
+).split(',')
+
+# 보안 헤더 설정
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_SSL_REDIRECT = not DEBUG  # 프로덕션에서만 HTTPS 리다이렉트
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 
-# Application definition
+# ============================================================
+# 애플리케이션 정의
+# ============================================================
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,9 +68,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Third-party apps
     'rest_framework',
-    # 'corsheaders',  # 필요 시 설치: pip install django-cors-headers
-    # 'django_celery_beat',  # 필요 시 설치: pip install django-celery-beat
-    # 'django_filters',  # 필요 시 설치: pip install django-filter
+    'corsheaders',
+    'django_filters',
+    'django_celery_beat',  # Celery Beat 스케줄링 (PR-7)
+    'channels',  # WebSocket support (PR-13)
     # Local apps
     'apps.market',
     'apps.patterns',
@@ -49,6 +79,15 @@ INSTALLED_APPS = [
     'apps.alerts',
     'apps.backtest',
     'apps.kiwoom',
+    'apps.portfolio',
+    'apps.realtime',
+    'apps.ml',
+    'apps.ingest',  # Agent data ingestion
+    'apps.us_market',  # US Market models (PR-10)
+    'apps.us_patterns',  # US Trading patterns (PR-10)
+    'apps.ontology',  # Ontology & Semantic Web (PR-16)
+    'apps.config',  # API 설정 관리 (P0 추가)
+    'apps.common',  # 공통 컴포넌트 (P1-P3 추가)
 ]
 
 MIDDLEWARE = [
@@ -60,6 +99,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.ingest.middleware.AgentAuthMiddleware',  # Agent authentication
+    'apps.common.middleware.RateLimitMiddleware',  # 레이트 리밋 (P3)
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -80,13 +121,43 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# ============================================================
+# 데이터베이스 설정 (P0 개선)
+# ============================================================
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+DB_ENGINE = os.environ.get('DB_ENGINE', 'sqlite')
+
+if DB_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'powerstock'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'CONN_MAX_AGE': 60,  # 커넥션 풀
+            'OPTIONS': {
+                'connect_timeout': 10,
+            },
+        }
+    }
+else:
+    # Default: SQLite (개발용)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+
+# ============================================================
+# 비밀번호 유효성 검사
+# ============================================================
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -104,40 +175,50 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# ============================================================
+# 국제화 설정 (P1 수정)
+# ============================================================
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'ko-kr'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
-
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# ============================================================
+# 정적 파일 설정
+# ============================================================
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS Settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+
+# ============================================================
+# CORS 설정
+# ============================================================
+
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:3000,http://127.0.0.1:3000'
+).split(',')
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only in development
 
-# REST Framework Settings
+
+# ============================================================
+# REST Framework 설정 (P1 개선)
+# ============================================================
+
+from rest_framework.settings import api_settings
+
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 50,
+    'PAGE_SIZE': int(os.environ.get('PAGE_SIZE', 50)),
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
@@ -145,32 +226,200 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
+        'django_filters.rest_framework.DjangoFilterBackend',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+    },
+    'EXCEPTION_HANDLER': 'apps.common.exceptions.custom_exception_handler',
 }
 
-# Database Configuration
-# Development: SQLite / Production: PostgreSQL
-import os
 
-DB_ENGINE = os.environ.get('DB_ENGINE', 'sqlite')
+# ============================================================
+# 캐시 설정 (P2 개선)
+# ============================================================
 
-if DB_ENGINE == 'postgresql':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'trading_db'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
-        }
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache' if DEBUG else 'django_redis.cache.RedisCache',
+        'LOCATION': f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:{os.environ.get('REDIS_PORT', '6379')}/1" if not DEBUG else None,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        } if not DEBUG else {},
+        'KEY_PREFIX': 'powerstock',
+        'TIMEOUT': 300,  # 5분
+    },
+    'api_token': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache' if DEBUG else 'django_redis.cache.RedisCache',
+        'LOCATION': f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:{os.environ.get('REDIS_PORT', '6379')}/2" if not DEBUG else None,
+        'TIMEOUT': 3600,  # 1시간
     }
-else:
-    # Default: SQLite
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
+# 세션 캐시 (P2)
+if not DEBUG:
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+
+
+# ============================================================
+# Celery 설정
+# ============================================================
+
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_WORKER_PREFETCH_MULTIPLIER = 4
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30분
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # 25분
+
+
+# ============================================================
+# Channels/WebSocket 설정
+# ============================================================
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer' if DEBUG else 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [(os.environ.get('REDIS_HOST', '127.0.0.1'), int(os.environ.get('REDIS_PORT', 6379)))],
+        } if not DEBUG else {},
+    },
+}
+
+
+# ============================================================
+# 에이전트 API 키
+# ============================================================
+
+AGENT_API_KEY = os.environ.get('AGENT_API_KEY', 'dev-agent-key-change-in-production')
+
+
+# ============================================================
+# 한국투자증권 API 설정
+# ============================================================
+
+KIS_API_ENABLED = False  # KIS API 비활성화
+KIS_APP_KEY = os.environ.get('KIS_APP_KEY', '')
+KIS_APP_SECRET = os.environ.get('KIS_APP_SECRET', '')
+KIS_ACCOUNT_NUMBER = os.environ.get('KIS_ACCOUNT_NUMBER', '')
+KIS_DEMO = os.environ.get('KIS_DEMO', 'true').lower() == 'true'
+
+
+# ============================================================
+# 키움 REST API 설정
+# ============================================================
+
+KIWOOM_API_ENABLED = os.environ.get('KIWOOM_API_ENABLED', 'True').lower() == 'true'
+KIWOOM_USE_PRODUCTION = os.environ.get('KIWOOM_BASE_URL', 'https://api.kiwoom.com') == 'https://api.kiwoom.com'
+KIWOOM_APPKEY = os.environ.get('KIWOOM_APPKEY', '')
+KIWOOM_SECRETKEY = os.environ.get('KIWOOM_SECRETKEY', '')
+KIWOOM_BASE_URL = os.environ.get('KIWOOM_BASE_URL', 'https://api.kiwoom.com')
+KIWOOM_TOKEN_CACHE_TTL = int(os.environ.get('KIWOOM_TOKEN_CACHE_TTL', '86400'))  # 24시간
+KIWOOM_MAX_RETRIES = int(os.environ.get('KIWOOM_MAX_RETRIES', '3'))
+KIWOOM_RETRY_BACKOFF = float(os.environ.get('KIWOOM_RETRY_BACKOFF', '1.0'))
+KIWOOM_REQUEST_TIMEOUT = int(os.environ.get('KIWOOM_REQUEST_TIMEOUT', '30'))
+
+
+# ============================================================
+# Polygon.io API 설정
+# ============================================================
+
+POLYGON_API_ENABLED = os.environ.get('POLYGON_API_ENABLED', 'False').lower() == 'true'
+POLYGON_API_KEY = os.environ.get('POLYGON_API_KEY', '')
+
+
+# ============================================================
+# 로깅 설정 (P3)
+# ============================================================
+
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'maxBytes': 1024 * 1024 * 100,  # 100MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'django-error.log',
+            'maxBytes': 1024 * 1024 * 50,  # 50MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['error_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'apps': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+    }
+}
+
+
+# ============================================================
+# 레이트 리밋 설정 (P3)
+# ============================================================
+
+RATELIMIT_ENABLE = os.environ.get('RATELIMIT_ENABLE', 'True').lower() == 'true'
+RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_VIEW = 'apps.common.middleware.rate_limited'
+
+
+# ============================================================
+# 헬스체크 설정 (P3)
+# ============================================================
+
+HEALTH_CHECK_TOKEN = os.environ.get('HEALTH_CHECK_TOKEN', 'dev-token-change-in-production')

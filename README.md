@@ -54,7 +54,7 @@ Pattern 3 (IPO반등):   IPO 후 조정 → 재반등
 - ✅ 알림 설정 UI
 - ✅ 알림 내역 및 통계
 
-### Phase C: 기술적 지표 ✅ NEW!
+### Phase C: 기술적 지표 ✅
 - ✅ **장기이평선 레벨 시스템** (5/20/60/112/224)
 - ✅ **거래량 분석** (전일 대비, 110% 돌파 감지)
 - ✅ **지지/저항선** 자동 인식
@@ -62,6 +62,14 @@ Pattern 3 (IPO반등):   IPO 후 조정 → 재반등
 - ✅ **추세 분석** (단기/중기/장기)
 - ✅ **종합 점수** 계산 (0-100점)
 - ✅ **기술적 대시보드** (상위 종목, 돌파 후보, 매집 구간)
+
+### Phase D: 실시간 업데이트 ✨ NEW!
+- ✅ **WebSocket 실시간 시세** (저지연 업데이트)
+- ✅ **HTTP 폴링 제거** (5초 간격 → 실시간 푸시)
+- ✅ **다중 채널 알림** (Slack + Telegram + Email)
+- ✅ **자동 재연결** (WebSocket 연결 관리)
+- ✅ **연결 상태 모니터링** (실시간 상태 표시)
+- ✅ **하이브리드 모드** (WebSocket/HTTP 자동 전환)
 
 ---
 
@@ -72,7 +80,7 @@ Pattern 3 (IPO반등):   IPO 후 조정 → 재반등
 Python 3.9+
 Node.js 16+
 PostgreSQL 13+ (또는 SQLite)
-Redis (선택, Celery용)
+Redis 6+ (WebSocket 채널용, 선택)
 ```
 
 ### 1. 클론 및 설치
@@ -106,8 +114,11 @@ python manage.py migrate
 # 관리자 계정 생성
 python manage.py createsuperuser
 
-# 서버 실행
-python manage.py runserver
+# 서버 실행 (WebSocket 지원)
+daphne -b 0.0.0.0 -p 8000 config.asgi:application
+
+# 또는 개발용 (WebSocket 제한)
+python manage.py runserver 8000
 ```
 
 ### 3. Frontend 설정
@@ -125,9 +136,21 @@ npm start
 ### 4. 접속
 
 ```
-Frontend: http://localhost:3000
-Backend:  http://localhost:8000
-Admin:    http://localhost:8000/admin
+Frontend:   http://localhost:3000
+Backend:    http://localhost:8000
+WebSocket:  ws://localhost:8000/ws/market/
+Admin:      http://localhost:8000/admin
+```
+
+### 5. WebSocket 테스트 (NEW!)
+
+```bash
+# WebSocket 브로드캐스트 테스트
+cd backend
+python manage.py test_websocket
+
+# 프론트엔드에서 실시간 업데이트 확인
+# http://localhost:3000/realtime 접속
 ```
 
 ---
@@ -178,7 +201,7 @@ Admin:    http://localhost:8000/admin
 결과: 조건에 맞는 고득점 종목 목록
 ```
 
-### 5. 기술적 지표 확인 (NEW!)
+### 5. 기술적 지표 확인
 
 ```
 메뉴: 3. 패턴 분석 → 📈 기술적 지표
@@ -194,20 +217,56 @@ Admin:    http://localhost:8000/admin
    - 급등 가능성 높음
 
 3. 📦 매집 구간
-   - 횡보 패턴
-   - 세력 매집 중
-   - 향후 급등 대기
-
-표시 정보:
-- 이평선 레벨 (0-5) ⭐⭐⭐⭐⭐
-- 배열 상태 (정배열/역배열/혼조)
-- 거래량 비율 (200%+/150%+/110%+)
-- 추세 (↗↗↗ 단기/중기/장기)
-- 패턴 (쌍바닥, 매집, 돌파)
-- 종합 점수 (0-100)
+   - 쌍바닥 패턴 감지
+   - 장기 횡보 구간
+   - 급등 전 조기 발견
 ```
 
-### 6. 백테스팅
+### 6. 실시간 시세 모니터링 (NEW!)
+
+```
+URL: http://localhost:3000/realtime
+
+기능:
+- WebSocket 실시간 주가 업데이트
+- 관심종목 추가/제거
+- 연결 상태 모니터링
+- 자동/수동 새로고침
+- HTTP 폴링 자동 폴백
+
+특징:
+- 저지연 (< 1초)
+- 서버 푸시 기반
+- 재연결 자동 처리
+```
+
+### 7. 알림 설정 (NEW!)
+
+```
+Slack 설정:
+1. https://api.slack.com/apps 접속
+2. App 생성 → Incoming Webhooks 활성화
+3. Webhook URL 복사
+4. backend/.env에 설정:
+   SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+
+Telegram 설정:
+1. @BotFather에서 봇 생성
+2. API 토큰 및 Chat ID 획득
+3. backend/.env에 설정:
+   TELEGRAM_BOT_TOKEN=your_token
+   TELEGRAM_CHAT_ID=your_chat_id
+
+Email 설정:
+1. Gmail 앱 비밀번호 생성
+2. backend/.env에 설정:
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASSWORD=your_app_password
+```
+
+### 8. 백테스팅
 
 ```
 메뉴: 3. 패턴 분석 → 📊 백테스팅 실행
