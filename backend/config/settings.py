@@ -45,6 +45,10 @@ ALLOWED_HOSTS = os.environ.get(
     'DJANGO_ALLOWED_HOSTS',
     'localhost,127.0.0.1'
 ).split(',')
+# Render.com 동적 호스트명 자동 허용
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # 보안 헤더 설정
 SECURE_BROWSER_XSS_FILTER = True
@@ -92,6 +96,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -128,9 +133,13 @@ ASGI_APPLICATION = 'config.asgi.application'
 # 데이터베이스 설정 (P0 개선)
 # ============================================================
 
+DATABASE_URL = os.environ.get('DATABASE_URL')
 DB_ENGINE = os.environ.get('DB_ENGINE', 'sqlite')
 
-if DB_ENGINE == 'postgresql':
+if DATABASE_URL:
+    import dj_database_url
+    DATABASES = {'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=60)}
+elif DB_ENGINE == 'postgresql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -139,14 +148,11 @@ if DB_ENGINE == 'postgresql':
             'PASSWORD': os.environ.get('DB_PASSWORD', ''),
             'HOST': os.environ.get('DB_HOST', 'localhost'),
             'PORT': os.environ.get('DB_PORT', '5432'),
-            'CONN_MAX_AGE': 60,  # 커넥션 풀
-            'OPTIONS': {
-                'connect_timeout': 10,
-            },
+            'CONN_MAX_AGE': 60,
+            'OPTIONS': {'connect_timeout': 10},
         }
     }
 else:
-    # Default: SQLite (개발용)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
