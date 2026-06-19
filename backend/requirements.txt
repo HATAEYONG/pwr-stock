@@ -10,4 +10,3 @@ redis>=5.0.0
 django-celery-beat>=2.5.0
 psycopg2-binary>=2.9.9
 requests>=2.31.0
-# PyQt5>=5.15.0  # Windows에서만 필요 (키움증권 API)
