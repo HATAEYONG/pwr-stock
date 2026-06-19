@@ -19,11 +19,6 @@ services:
         fromDatabase:
           name: powerstock-db
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: powerstock-redis
-          type: redis
-          property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
           name: powerstock-redis
@@ -96,13 +91,14 @@ services:
           type: redis
           property: connectionString
 
+  # ── Redis ─────────────────────────────────────────────────
+  - type: redis
+    name: powerstock-redis
+    plan: free
+    ipAllowList: []
+
 databases:
   - name: powerstock-db
     databaseName: powerstock
     user: powerstock
     plan: free
-
-  - name: powerstock-redis
-    type: redis
-    plan: free
-    ipAllowList: []
